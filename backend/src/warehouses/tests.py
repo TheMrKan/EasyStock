@@ -1,4 +1,5 @@
 from rest_framework.test import APITestCase
+from rest_framework import status
 from django.urls import reverse
 
 from components.models import Component
@@ -28,6 +29,8 @@ class StockTransactionTestCase(APITestCase):
             "extra": {"comment": "Manual transaction"}
         }, format="json")
 
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
         data = response.data
         del data["transaction"]["timestamp"]
 
@@ -49,4 +52,102 @@ class StockTransactionTestCase(APITestCase):
             },
         )
 
+    def test_add_second_transaction(self):
+        # Сначала создаем первую транзакцию
+        self.client.post(self.url, {
+            "item_type": "component",
+            "item_id": 1,
+            "quantity_delta": 2,
+            "extra": {"comment": "First transaction"}
+        }, format="json")
 
+        # Добавляем вторую транзакцию
+        response = self.client.post(self.url, {
+            "item_type": "component",
+            "item_id": 1,
+            "quantity_delta": 3,
+            "extra": {"comment": "Second transaction"}
+        }, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = response.data
+        del data["transaction"]["timestamp"]
+
+        self.assertEqual(
+            data,
+            {
+                "transaction": {
+                    "id": 2,
+                    "type": "manual",
+                    "item_type": "component",
+                    "item_id": 1,
+                    "quantity_delta": 3,
+                    "extra": {"comment": "Second transaction"},
+                },
+                "stock": {
+                    "item_id": 1,
+                    "quantity": 5  # 2 + 3 = 5
+                }
+            },
+        )
+
+    def test_remove_item_from_stock(self):
+        # Сначала добавляем 2 единицы
+        self.client.post(self.url, {
+            "item_type": "component",
+            "item_id": self.comp1.id,
+            "quantity_delta": 2,
+            "extra": {"comment": "Initial stock"}
+        }, format="json")
+
+        # Теперь уменьшаем на 1
+        response = self.client.post(self.url, {
+            "item_type": "component",
+            "item_id": self.comp1.id,
+            "quantity_delta": -1,
+            "extra": {"comment": "Removing one unit"}
+        }, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data = response.data
+        del data["transaction"]["timestamp"]
+
+        self.assertEqual(
+            data,
+            {
+                "transaction": {
+                    "id": 2,
+                    "type": "manual",
+                    "item_type": "component",
+                    "item_id": self.comp1.id,
+                    "quantity_delta": -1,
+                    "extra": {"comment": "Removing one unit"},
+                },
+                "stock": {
+                    "item_id": self.comp1.id,
+                    "quantity": 1  # 2 - 1 = 1
+                }
+            },
+        )
+
+    def test_cannot_remove_more_than_available(self):
+        # Сначала добавляем 2 единицы
+        self.client.post(self.url, {
+            "item_type": "component",
+            "item_id": self.comp1.id,
+            "quantity_delta": 2,
+            "extra": {"comment": "Initial stock"}
+        }, format="json")
+
+        # Пытаемся списать 3 единицы — больше, чем есть
+        response = self.client.post(self.url, {
+            "item_type": "component",
+            "item_id": self.comp1.id,
+            "quantity_delta": -3,
+            "extra": {"comment": "Trying to remove more than available"}
+        }, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+        self.assertEqual(response.data["detail"].code, "insufficient_stock")

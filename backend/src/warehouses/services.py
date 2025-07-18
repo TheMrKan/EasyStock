@@ -39,10 +39,10 @@ class WarehouseTransactionManager:
         self.warehouse = warehouse
 
     def make_transaction(self,
-                         type: str,
+                         type: StockTransaction.TransactionType,
                          item: Component | Product,
                          quantity_delta: int,
-                         extra: dict | None = None):
+                         extra: dict | None = None) -> StockTransaction:
         if quantity_delta == 0:
             raise ValueError("Quantity delta can't be 0")
         
@@ -66,3 +66,5 @@ class WarehouseTransactionManager:
                 raise self.ImpossibleTransactionError("Got negative item quantity after the transaction")
             
             stock.save()
+
+        return transaction

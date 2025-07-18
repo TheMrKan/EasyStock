@@ -71,5 +71,5 @@ class StockTransactionSerializer(ModelSerializer):
 
 
 class TransactionCreateResponseSerializer(Serializer):
-    transaction = StockTransactionSerializer
-    stock = StockItemSerializer
+    transaction = StockTransactionSerializer()
+    stock = StockItemSerializer()

@@ -57,7 +57,9 @@ class WarehouseViewset(ModelViewSet):
             stock = WarehouseStockViewer(warehouse).get_stock(serializer.validated_data["item"])
             response_serializer = TransactionCreateResponseSerializer({"transaction": transaction,
                                                                        "stock": stock})
+
             return Response(response_serializer.data, status.HTTP_201_CREATED)
 
         except WarehouseTransactionManager.ImpossibleTransactionError as e:
-            raise APIException(str(e), status.HTTP_409_CONFLICT)
+            raise APIException(status.HTTP_409_CONFLICT, str(e), code="insufficient_stock")
+

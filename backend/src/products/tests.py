@@ -80,7 +80,7 @@ class UpdateComponentRelationTestCase(APITestCase):
 
 
 class RemoveComponentRelationTestCase(APITestCase):
-    url : str
+    url: str
 
     def setUp(self):
         c0 = Component.objects.create(name="Component 0", description="Description 0")
