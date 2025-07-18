@@ -1,5 +1,5 @@
 [project]
-name = "easystash"
+name = "easystock"
 version = "0.1.0"
 description = ""
 authors = [
@@ -15,7 +15,7 @@ dependencies = [
 ]
 
 [tool.poetry]
-packages = [{include = "easystash", from = "src"}]
+packages = [{include = "easystock", from = "src"}]
 
 
 [build-system]
