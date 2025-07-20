@@ -21,7 +21,7 @@ class Migration(migrations.Migration):
                 ('component_count', models.PositiveIntegerField(verbose_name='Количество')),
                 ('created', models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')),
                 ('eta', models.DateField(verbose_name='Дата прибытия')),
-                ('status', models.CharField(choices=[('PENDING', 'Pending'), ('RECEIVED', 'Received'), ('CANCELLED', 'Cancelled')], default='PENDING')),
+                ('status', models.CharField(choices=[('PENDING', 'Pending'), ('RECEIVED', 'Received'), ('CANCELED', 'Cancelled')], default='PENDING')),
                 ('component', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='components.component', verbose_name='Компонент')),
                 ('warehouse', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='warehouses.warehouse', verbose_name='Склад')),
             ],

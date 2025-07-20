@@ -21,6 +21,12 @@ class WarehouseStockViewer:
     def get_stock(self, item: Component | Product) -> StockItem | None:
         return self.warehouse.stock.filter(item_id=item.id, item_type=self.get_item_type(type(item))).first()
 
+    def get_stock_quantity(self, item: Component | Product) -> int:
+        stock = self.get_stock(item)
+        if stock:
+            return stock.quantity
+        return 0
+
     def list_components(self) -> QuerySet:
         return self.warehouse.stock.filter(item_type=self.get_item_type(Component))
     

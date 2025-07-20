@@ -9,7 +9,7 @@ class Supply(models.Model):
     class Status(models.TextChoices):
         PENDING = 'PENDING'
         RECEIVED = 'RECEIVED'
-        CANCELLED = 'CANCELLED'
+        CANCELED = 'CANCELED'
 
     id = models.BigAutoField(primary_key=True)
     component = models.ForeignKey(Component, on_delete=models.CASCADE, verbose_name="Компонент")

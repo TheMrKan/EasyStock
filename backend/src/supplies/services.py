@@ -29,7 +29,7 @@ class SupplyCreator:
         self.eta = eta
         self.status = status
 
-    def create(self):
+    def create(self) -> Supply:
         with atomic():
             supply = Supply(
                 component=self.component,
@@ -39,7 +39,10 @@ class SupplyCreator:
             )
             supply.save()
 
-            SupplyUpdater(supply).update_status(self.status)
+            try:
+                SupplyUpdater(supply).update_status(self.status)
+            except  SupplyUpdater.NotChangedError:
+                pass
 
         return supply
 
@@ -47,9 +50,13 @@ class SupplyCreator:
 class SupplyUpdater:
     supply: Supply
 
-    class InvalidSupplyStateError(DomainError):
+    class InvalidSupplyStatusError(DomainError):
         def __init__(self):
             self.code = "invalid_state"
+
+    class NotChangedError(DomainError):
+        def __init__(self):
+            self.code = "not_changed"
 
     def __init__(self, supply: Supply):
         self.supply = supply
@@ -59,12 +66,15 @@ class SupplyUpdater:
         if eta < date.today():
             raise ValidationError("Cant be in past", "cant_be_in_past")
 
-    def update_status(self, new_status: Supply.Status):
-        if new_status == self.supply.status:
-            return
+    def assert_is_pending(self):
+        if self.supply.status in (Supply.Status.RECEIVED, Supply.Status.CANCELED):
+            raise self.InvalidSupplyStatusError()
 
-        if self.supply.status in (Supply.Status.RECEIVED, Supply.Status.CANCELLED):
-            raise self.InvalidSupplyStateError()
+    def update_status(self, new_status: Supply.Status):
+        self.assert_is_pending()
+
+        if new_status == self.supply.status:
+            raise self.NotChangedError()
 
         with atomic():
             self.supply.status = new_status
