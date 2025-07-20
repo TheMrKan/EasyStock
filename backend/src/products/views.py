@@ -22,11 +22,11 @@ class ProductViewset(ModelViewSet):
 
         try:
             ProductComponentsManager(product).update_quantity(serializer.validated_data["component"],
-                                                             serializer.validated_data["quantity"])
+                                                              serializer.validated_data["quantity"])
             
             response_serializer = ProductSerializer(product)
             return Response(response_serializer.data)
         except ValueError:
-            raise APIException("Invalid quantity", code=status.HTTP_400_BAD_REQUEST)
+            raise APIException(status.HTTP_400_BAD_REQUEST, "Invalid quantity")
 
 

@@ -26,4 +26,8 @@ class SupplyViewSet(ModelViewSet):
         response_serializer = SupplySerializer(supply)
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
+    def update(self, request, *args, **kwargs):
+        return super().update(request, *args, **kwargs)
+
+
 

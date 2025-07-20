@@ -58,6 +58,11 @@ class UpdateComponentRelationTestCase(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_add_negative(self):
+        response = self.client.post(self.url, {"component": 4, "quantity": -1})
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_update(self):
         response = self.client.post(self.url, {"component": 1, "quantity": 1})
         response = self.client.post(self.url, {"component": 2, "quantity": 6})
