@@ -54,6 +54,7 @@ class StockTransaction(models.Model):
 
     class TransactionType(models.TextChoices):
         MANUAL = "manual"
+        SUPPLY = "supply"
 
     id = models.BigAutoField(primary_key=True)
     warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE, verbose_name="Склад",
