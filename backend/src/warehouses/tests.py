@@ -23,6 +23,7 @@ class StockTransactionTestCase(APITestCase):
 
     def test_add_from_zero(self):
         response = self.client.post(self.url, {
+            "warehouse": self.warehouse1.id,
             "item_type": "component",
             "item_id": 1,
             "quantity_delta": 2,
@@ -31,7 +32,7 @@ class StockTransactionTestCase(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        data = response.data
+        data = response.json()
         del data["transaction"]["timestamp"]
 
         self.assertEqual(
@@ -39,6 +40,7 @@ class StockTransactionTestCase(APITestCase):
             {
                 "transaction": {
                     "id": 1,
+                    "warehouse": self.warehouse1.id,
                     "type": "manual",
                     "item_type": "component",
                     "item_id": 1,
@@ -55,6 +57,7 @@ class StockTransactionTestCase(APITestCase):
     def test_add_second_transaction(self):
         # Сначала создаем первую транзакцию
         self.client.post(self.url, {
+            "warehouse": self.warehouse1.id,
             "item_type": "component",
             "item_id": 1,
             "quantity_delta": 2,
@@ -63,6 +66,7 @@ class StockTransactionTestCase(APITestCase):
 
         # Добавляем вторую транзакцию
         response = self.client.post(self.url, {
+            "warehouse": self.warehouse1.id,
             "item_type": "component",
             "item_id": 1,
             "quantity_delta": 3,
@@ -71,7 +75,7 @@ class StockTransactionTestCase(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        data = response.data
+        data = response.json()
         del data["transaction"]["timestamp"]
 
         self.assertEqual(
@@ -79,6 +83,7 @@ class StockTransactionTestCase(APITestCase):
             {
                 "transaction": {
                     "id": 2,
+                    "warehouse": self.warehouse1.id,
                     "type": "manual",
                     "item_type": "component",
                     "item_id": 1,
@@ -95,6 +100,7 @@ class StockTransactionTestCase(APITestCase):
     def test_remove_item_from_stock(self):
         # Сначала добавляем 2 единицы
         self.client.post(self.url, {
+            "warehouse": self.warehouse1.id,
             "item_type": "component",
             "item_id": self.comp1.id,
             "quantity_delta": 2,
@@ -103,6 +109,7 @@ class StockTransactionTestCase(APITestCase):
 
         # Теперь уменьшаем на 1
         response = self.client.post(self.url, {
+            "warehouse": self.warehouse1.id,
             "item_type": "component",
             "item_id": self.comp1.id,
             "quantity_delta": -1,
@@ -111,7 +118,7 @@ class StockTransactionTestCase(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        data = response.data
+        data = response.json()
         del data["transaction"]["timestamp"]
 
         self.assertEqual(
@@ -119,6 +126,7 @@ class StockTransactionTestCase(APITestCase):
             {
                 "transaction": {
                     "id": 2,
+                    "warehouse": self.warehouse1.id,
                     "type": "manual",
                     "item_type": "component",
                     "item_id": self.comp1.id,
@@ -135,6 +143,7 @@ class StockTransactionTestCase(APITestCase):
     def test_cannot_remove_more_than_available(self):
         # Сначала добавляем 2 единицы
         self.client.post(self.url, {
+            "warehouse": self.warehouse1.id,
             "item_type": "component",
             "item_id": self.comp1.id,
             "quantity_delta": 2,
@@ -143,6 +152,7 @@ class StockTransactionTestCase(APITestCase):
 
         # Пытаемся списать 3 единицы — больше, чем есть
         response = self.client.post(self.url, {
+            "warehouse": self.warehouse1.id,
             "item_type": "component",
             "item_id": self.comp1.id,
             "quantity_delta": -3,
@@ -150,4 +160,54 @@ class StockTransactionTestCase(APITestCase):
         }, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
-        self.assertEqual(response.data["detail"].code, "insufficient_stock")
+        self.assertEqual(response.json()["code"], "insufficient_stock")
+
+
+class WarehouseTransactionHistoryTest(APITestCase):
+    def setUp(self):
+        self.warehouse = Warehouse.objects.create(name="Test Warehouse")
+        self.product = Product.objects.create(name="Test Product")
+
+    def test_transaction_history_for_product(self):
+        url = reverse("warehouse-transactions", args=[self.warehouse.id])
+
+        # Создаём несколько транзакций
+        resp1 = self.client.post(url, {
+            "warehouse": self.warehouse.id,
+            "item_type": "product",
+            "item_id": self.product.id,
+            "quantity_delta": 15
+        }, format="json")
+        self.assertEqual(resp1.status_code, 201)
+
+        resp2 = self.client.post(url, {
+            "warehouse": self.warehouse.id,
+            "item_type": "product",
+            "item_id": self.product.id,
+            "quantity_delta": -5
+        }, format="json")
+        self.assertEqual(resp2.status_code, 201)
+
+        resp3 = self.client.post(url, {
+            "warehouse": self.warehouse.id,
+            "item_type": "product",
+            "item_id": self.product.id,
+            "quantity_delta": 3
+        }, format="json")
+        self.assertEqual(resp3.status_code, 201)
+
+        # Получаем историю транзакций
+        resp = self.client.get(url,)
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertIsInstance(data, list)
+        self.assertEqual(len(data), 3)
+
+        # Проверяем порядок (от новых к старым)
+        self.assertEqual([tx["quantity_delta"] for tx in data], [3, -5, 15])
+
+        # Проверяем структуру и значения
+        for tx in data:
+            self.assertEqual(tx["item_id"], self.product.id)
+            self.assertEqual(tx["warehouse"], self.warehouse.id)
+            self.assertIn("timestamp", tx)

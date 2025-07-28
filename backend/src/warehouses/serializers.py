@@ -57,17 +57,17 @@ class StockTransactionSerializer(ModelSerializer):
 
     class Meta:
         model = StockTransaction
-        fields = ["id", "type", "item_type", "item_id", "quantity_delta", "timestamp", "extra"]
+        fields = ["id", "warehouse", "type", "item_type", "item_id", "quantity_delta", "timestamp", "extra"]
         read_only_fields = ["type"]
 
-    def validate(self, data) -> None:
+    def validate(self, attrs) -> None:
         try:
-            item = data["item_type"].get_object_for_this_type(pk=data["item_id"])
+            item = attrs["item_type"].get_object_for_this_type(pk=attrs["item_id"])
         except ObjectDoesNotExist:
             raise ValidationError("Item not found", "item_not_found")
         
-        data["item"] = item
-        return data
+        attrs["item"] = item
+        return attrs
 
 
 class TransactionCreateResponseSerializer(Serializer):

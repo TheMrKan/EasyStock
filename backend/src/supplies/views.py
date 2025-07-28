@@ -1,4 +1,4 @@
-from rest_framework.exceptions import ValidationError, MethodNotAllowed
+from rest_framework.exceptions import ValidationError, MethodNotAllowed, ErrorDetail
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework import status
@@ -22,8 +22,7 @@ class SupplyViewSet(ModelViewSet):
             serializer.validated_data['status'],
         ).create()
 
-        response_serializer = SupplySerializer(supply)
-        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+        serializer.instance = supply
 
     def update(self, request, *args, **kwargs):
         # POST обновляет всю модель целиком. Разрешено только обновление одного поля
@@ -50,7 +49,7 @@ class SupplyViewSet(ModelViewSet):
             return Response(serializer.data, status=status.HTTP_200_OK)
 
         except DomainError as e:
-            raise ValidationError({key: e.code})
+            raise ValidationError({key: [ErrorDetail(e.message, code=e.code)]})
 
         response_serializer = SupplySerializer(supply)
         return Response(response_serializer.data, status=status.HTTP_200_OK)

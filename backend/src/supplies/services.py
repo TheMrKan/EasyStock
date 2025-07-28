@@ -1,6 +1,6 @@
 from datetime import date
 from django.db.transaction import atomic
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError, ErrorDetail
 
 from utils.exceptions import DomainError
 from .models import Supply
@@ -52,11 +52,11 @@ class SupplyUpdater:
 
     class InvalidSupplyStatusError(DomainError):
         def __init__(self):
-            self.code = "invalid_state"
+            super().__init__("Operation is not allowed with this status", "invalid_status")
 
     class NotChangedError(DomainError):
         def __init__(self):
-            self.code = "not_changed"
+            super().__init__("Supply status not changed", "not_changed")
 
     def __init__(self, supply: Supply):
         self.supply = supply
@@ -64,7 +64,8 @@ class SupplyUpdater:
     @classmethod
     def validate_eta(cls, eta: date):
         if eta < date.today():
-            raise ValidationError("Cant be in past", "cant_be_in_past")
+            # DRF-friendly: вложенный ValidationError для message+code
+            raise ValidationError([ErrorDetail("ETA can't be in past", code="cant_be_in_past")])
 
     def assert_is_pending(self):
         if self.supply.status in (Supply.Status.RECEIVED, Supply.Status.CANCELED):

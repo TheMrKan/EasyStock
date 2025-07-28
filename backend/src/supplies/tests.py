@@ -29,7 +29,7 @@ class TestCreateSupply(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Supply.objects.count(), 1)
 
-        supply = Supply.objects.first()
+        supply = Supply.objects.get()
         self.assertEqual(supply.status, Supply.Status.PENDING)
         self.assertEqual(supply.component, self.component)
         self.assertEqual(supply.warehouse, self.warehouse)
@@ -49,8 +49,8 @@ class TestCreateSupply(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(Supply.objects.count(), 0)
 
-        self.assertIn("eta", response.data)
-        self.assertEqual("cant_be_in_past", response.data["eta"][0].code)
+        self.assertIn("eta", response.json())
+        self.assertEqual("cant_be_in_past", response.json()["eta"][0]["code"])
 
     def test_create_supply_received(self):
         data = {
@@ -66,13 +66,15 @@ class TestCreateSupply(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Supply.objects.count(), 1)
 
-        supply = Supply.objects.first()
+        supply = Supply.objects.get()
         self.assertEqual(supply.status, Supply.Status.RECEIVED)
         self.assertEqual(supply.component, self.component)
         self.assertEqual(supply.warehouse, self.warehouse)
         self.assertEqual(supply.component_count, 50)
-
-        self.assertEqual(WarehouseStockViewer(self.warehouse).get_stock(self.component).quantity, 50)
+        
+        stock = WarehouseStockViewer(self.warehouse).get_stock(self.component)
+        assert stock is not None    # чтобы pylance не жаловался
+        self.assertEqual(stock.quantity, 50)
 
 
 class TestUpdateSupply(APITestCase):
@@ -100,7 +102,7 @@ class TestUpdateSupply(APITestCase):
         response = self.client.patch(f"/supplies/{supply.id}/", {"eta": (date.today() + timedelta(days=2)).isoformat(), "status": "RECEIVED"}, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data["detail"].code, "invalid_fields")
+        self.assertEqual(response.json()["code"], "invalid_fields")
 
     def test_update_unknown_field(self):
         supply = SupplyCreator(self.component, 5, self.warehouse, date.today() + timedelta(days=1), Supply.Status.PENDING).create()
@@ -108,15 +110,15 @@ class TestUpdateSupply(APITestCase):
         response = self.client.patch(f"/supplies/{supply.id}/", {"unknown_field": 1}, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data["detail"].code, "unknown_field")
+        self.assertEqual(response.json()["code"], "unknown_field")
 
     def test_receive_supply(self):
         supply = SupplyCreator(self.component, 5, self.warehouse, date.today() + timedelta(days=1), Supply.Status.PENDING).create()
 
         response = self.client.patch(f"/supplies/{supply.id}/", {"status": "RECEIVED"}, format="json")
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-        self.assertEqual(response.data["status"], "RECEIVED")
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.json())
+        self.assertEqual(response.json()["status"], "RECEIVED")
 
         self.assertEqual(WarehouseStockViewer(self.warehouse).get_stock_quantity(self.component), 5)
 
@@ -125,8 +127,10 @@ class TestUpdateSupply(APITestCase):
 
         response = self.client.patch(f"/supplies/{supply.id}/", {"status": "RECEIVED"}, format="json")
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
-        self.assertEqual(response.data["status"].code, "invalid")
+        self.assertEqual(
+            response.status_code, status.HTTP_400_BAD_REQUEST, response.json()
+        )
+        self.assertEqual(response.json()["status"][0]["code"], "invalid_status")
 
         self.assertEqual(WarehouseStockViewer(self.warehouse).get_stock_quantity(self.component), 5)
 
@@ -135,8 +139,8 @@ class TestUpdateSupply(APITestCase):
 
         response = self.client.patch(f"/supplies/{supply.id}/", {"status": "CANCELED"}, format="json")
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-        self.assertEqual(response.data["status"], "CANCELED")
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.json())
+        self.assertEqual(response.json()["status"], "CANCELED")
 
         self.assertEqual(WarehouseStockViewer(self.warehouse).get_stock_quantity(self.component), 0)
 
@@ -145,9 +149,7 @@ class TestUpdateSupply(APITestCase):
 
         response = self.client.patch(f"/supplies/{supply.id}/", {"status": "CANCELED"}, format="json")
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
-        self.assertEqual(response.data["status"].code, "invalid")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.json())
+        self.assertEqual(response.json()["status"][0]["code"], "invalid_status", response.json())
 
         self.assertEqual(WarehouseStockViewer(self.warehouse).get_stock_quantity(self.component), 5)
-
-

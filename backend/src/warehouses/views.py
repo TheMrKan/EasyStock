@@ -36,7 +36,7 @@ class WarehouseViewset(ModelViewSet):
     def transactions(self, request, pk=None):
         warehouse = self.get_object()
 
-        serializer = StockTransactionSerializer(warehouse.transactions, many=True)
+        serializer = StockTransactionSerializer(warehouse.transactions.order_by("-timestamp", "-id"), many=True)
         return Response(serializer.data)
 
     @transactions.mapping.post

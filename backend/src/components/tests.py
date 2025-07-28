@@ -12,14 +12,14 @@ class ComponentCreationTestCase(APITestCase):
 
         response = self.client.post(url, {"name": ""})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data["name"][0].code, "blank")
+        self.assertEqual(response.json()["name"][0]["code"], "blank")
 
     def test_create_no_description(self):
         url = reverse("component-list")
 
         response = self.client.post(url, {"name": "Test component"})
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data, {"id": 1, "name": "Test component", "description": ""})
+        self.assertEqual(response.json(), {"id": 1, "name": "Test component", "description": ""})
         self.assertEqual(Component.objects.count(), 1)
         self.assertEqual(Component.objects.get().name, "Test component")
         self.assertEqual(Component.objects.get().description, "")
@@ -29,7 +29,7 @@ class ComponentCreationTestCase(APITestCase):
 
         response = self.client.post(url, {"name": "Test component", "description": "Descr"})
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data, {"id": 1, "name": "Test component", "description": "Descr"})
+        self.assertEqual(response.json(), {"id": 1, "name": "Test component", "description": "Descr"})
         self.assertEqual(Component.objects.count(), 1)
         self.assertEqual(Component.objects.get().name, "Test component")
         self.assertEqual(Component.objects.get().description, "Descr")
@@ -45,7 +45,7 @@ class ComponentUpdateTestCase(APITestCase):
 
         response = self.client.put(url, {"name": "New name", "description": "New descr"})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, {"id": 1, "name": "New name", "description": "New descr"})
+        self.assertEqual(response.json(), {"id": 1, "name": "New name", "description": "New descr"})
         self.assertEqual(Component.objects.get().name, "New name")
         self.assertEqual(Component.objects.get().description, "New descr")
 
@@ -54,5 +54,5 @@ class ComponentUpdateTestCase(APITestCase):
 
         response = self.client.put(url, {"name": ""})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data["name"][0].code, "blank")
+        self.assertEqual(response.json()["name"][0]["code"], "blank")
         self.assertEqual(Component.objects.get().name, "Test")

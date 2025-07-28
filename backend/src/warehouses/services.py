@@ -15,7 +15,7 @@ class WarehouseStockViewer:
         self.warehouse = warehouse
 
     @staticmethod
-    def get_item_type(model) -> str:
+    def get_item_type(model) -> ContentType:
         return ContentType.objects.get_for_model(model)
     
     def get_stock(self, item: Component | Product) -> StockItem | None:

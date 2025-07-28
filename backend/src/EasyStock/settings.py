@@ -60,6 +60,8 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
+REST_FRAMEWORK = {"EXCEPTION_HANDLER": "utils.exceptions.custom_exception_handler"}
+
 ROOT_URLCONF = "EasyStock.urls"
 
 TEMPLATES = [

@@ -1,3 +1,7 @@
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from django.db.models.manager import RelatedManager
+
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
@@ -13,6 +17,9 @@ class Warehouse(models.Model):
 
     id = models.BigAutoField(primary_key=True)
     name = models.CharField("Название", max_length=100)
+
+    if TYPE_CHECKING:
+        stock: "RelatedManager[StockItem]"
 
     def __str__(self):
         return f"{self.name} ({self.id})"
@@ -73,5 +80,6 @@ class StockTransaction(models.Model):
         verbose_name = "Складская транзакция"
         verbose_name_plural = "Складские транзакции"
         indexes = [
-            models.Index(fields=["warehouse_id"])
+            models.Index(fields=["warehouse_id"]),
+            models.Index(fields=["timestamp"])
         ]
