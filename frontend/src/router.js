@@ -1,17 +1,23 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import LayoutDefault from './components/LayoutDefault.vue';
-import HomeView from './views/HomeView.vue';
+import ComponentsView from './views/ComponentsView.vue';
 import AboutView from './views/AboutView.vue';
+import HomeView from './views/HomeView.vue';
 
 const routes = [
   {
     path: '/',
-    component: LayoutDefault, // Все маршруты будут использовать этот макет
+    component: LayoutDefault,
     children: [
       {
         path: '',
         name: 'home',
-        component: HomeView
+        component: HomeView,
+      },
+      {
+        path: '/components',
+        name: 'component',
+        component: ComponentsView,
       },
       {
         path: '/about',

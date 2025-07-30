@@ -4,12 +4,12 @@
         <p class="menu-label">ОБЩЕЕ</p>
         <ul class="menu-list">
             <li>
-                <a>
+                <router-link to="/">
                     <span class="icon">
                         <i class="fas fa-chart-bar"></i>
                     </span>
                     Обзор
-                </a>
+                </router-link>
             </li>
             <li>
                 <a>
@@ -31,12 +31,12 @@
         <p class="menu-label">Производство</p>
         <ul class="menu-list">
             <li>
-                <a>
+                <router-link to="components">
                     <span class="icon">
                         <i class="fas fa-cube"></i>
                     </span>
                     Компоненты
-                </a>
+                </router-link>
             </li>
             <li>
                 <a>
@@ -75,6 +75,8 @@
 </template>
 
 <style lang="scss">
+    @import '@/scss/global.scss';
+
     .logo {
         content: url("/logo.webp");
         max-height: 60px;
@@ -85,5 +87,16 @@
 
     .menu-list a {
         padding-left: 0;
+        border-radius: 8px !important;
+
+        &:hover {
+            background-color: hsla($primary-hue, 63%, 70%, 0.2);
+        }
+    }
+
+    .router-link-exact-active {
+        font-weight: bold;
+        background-color: hsla($primary-hue, 63%, 50%, 0.2) !important;
+
     }
 </style>

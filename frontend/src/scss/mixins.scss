@@ -1,0 +1,13 @@
+@use 'variables';
+
+@mixin fullScreen {
+    @media (max-width: #{$fullScreenBreakpoint}) {
+        @content;
+    }
+}
+
+@mixin menuBreakpoint {
+    @media (max-width: #{$menuBreakpoint}) {
+        @content;
+    }
+}
