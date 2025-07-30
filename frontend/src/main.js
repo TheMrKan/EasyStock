@@ -4,7 +4,7 @@ import Buefy from 'buefy';
 import 'buefy/dist/buefy.css';
 import router from './router';
 import '@fortawesome/fontawesome-free/css/all.css';
-import '@/scss/global.scss';
+import '@/scss/globals.scss';
 import { createPinia } from 'pinia';
 
 const pinia = createPinia();

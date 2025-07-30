@@ -74,8 +74,8 @@
     </aside>
 </template>
 
-<style lang="scss">
-    @import '@/scss/global.scss';
+<style scoped lang="scss">
+    @use '@/scss/globals.scss' as *;
 
     .logo {
         content: url("/logo.webp");
@@ -88,6 +88,7 @@
     .menu-list a {
         padding-left: 0;
         border-radius: 8px !important;
+        background: none;
 
         &:hover {
             background-color: hsla($primary-hue, 63%, 70%, 0.2);

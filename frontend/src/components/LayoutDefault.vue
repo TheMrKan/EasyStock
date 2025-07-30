@@ -60,7 +60,7 @@
 </template>
 
 <style scoped lang="scss">
-    @import '@/scss/global.scss';
+    @import '@/scss/globals.scss';
 
     $--bulma-primary: hsl($primary-hue, 63%, 33%);
 
