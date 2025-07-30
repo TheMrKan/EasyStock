@@ -13,6 +13,7 @@
     "lint": "eslint . --fix"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-free": "^7.0.0",
     "buefy": "^1.0.1",
     "vue": "^3.5.18",
     "vue-router": "^4.5.1"
@@ -23,6 +24,7 @@
     "eslint": "^9.31.0",
     "eslint-plugin-vue": "~10.3.0",
     "globals": "^16.3.0",
+    "sass": "^1.89.2",
     "vite": "^7.0.6",
     "vite-plugin-vue-devtools": "^8.0.0"
   }
