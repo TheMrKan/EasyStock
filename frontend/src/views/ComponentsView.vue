@@ -1,27 +1,22 @@
 <script setup>
   import { useDataStore } from '@/stores/dataStore';
+  import { fetchComponents } from "@/utils/components";
+  import { ref } from 'vue';
 
   const dataStore = useDataStore();
   dataStore.title = 'Компоненты';
   dataStore.titleIcon = "fas fa-cube";
 
-  const data = [
-    {
-      name: "Название компонента",
-      available: 5,
-      pending: 3
-    },
-    {
-      name: "Длинное название компонента",
-      available: 6,
-      pending: 2
-    },
-    {
-      name: "Третий компонент",
-      available: 1,
-      pending: 6
-    }
-  ]
+  const components = ref(null);
+
+  loadComponents();
+
+  async function loadComponents() {
+    console.log("Fetching...");
+    components.value = await fetchComponents();
+    console.log("Fetched");
+  }
+
 </script>
 
 <template>
@@ -32,8 +27,14 @@
     Новый компонент
   </div>
   <div class="grid">
-    <div v-for="comp in data" class="component-card">
-      <img src="/component.jpeg" />
+    <div v-if="components === null" class="loading-components">
+      Загрузка...
+    </div>
+    <div v-else-if="components?.length === 0" class="no-components">
+      Вы не добавили компоненты.
+    </div>
+    <div v-else v-for="comp in components" class="component-card">
+      <img :src="comp.iconUrl" />
       <div class="component-data">
         <span class="component-name">{{ comp.name }}</span>
         <div class="component-controls">
@@ -41,13 +42,13 @@
             <span class="icon">
               <i class="fas fa-warehouse"></i>
             </span>
-            {{ comp.available }} шт.
+            0 шт.
           </router-link>
           <router-link to="supplies" class="component-pending">
             <span class="icon">
               <i class="fas fa-truck-fast"></i>
             </span>
-            {{ comp.pending }} шт.
+            0 шт.
           </router-link>
         </div>
       </div>
@@ -85,6 +86,12 @@
       outline-color: hsl($primary-hue, 80%, 50%);
       box-shadow: hsla($primary-hue, 80%, 50%, 0.05) 0 0 10px 10px;
     }
+  }
+
+  .no-components, .loading-components {
+    text-align: center;
+    font-weight: 600;
+    font-size: 1.2rem;
   }
 
   .component-card {
